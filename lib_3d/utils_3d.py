@@ -163,6 +163,7 @@ class Model:
         for face in faces:
             face.computed_distance_from_model_center = Vertex.distance(face.center, self.center)
         self.rotation = Vertex()
+        self.name = ""
 
     def __str__(self) -> str:
         return f"<Model with {len(self.faces)} faces>"

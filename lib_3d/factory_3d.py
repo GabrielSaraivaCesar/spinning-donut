@@ -44,6 +44,7 @@ def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Model:
     # Create faces using quads_factory
     faces = _toroid_quads_factory(vertices, resolution)
     model = utils_3d.Model(faces)
+    model.name = "Toroid"
     return model
 
 
@@ -78,4 +79,5 @@ def cube_factory(size: float) -> utils_3d.Model:
 
     # Create and return the cube model
     model = utils_3d.Model(faces)
+    model.name = "Cube"
     return model

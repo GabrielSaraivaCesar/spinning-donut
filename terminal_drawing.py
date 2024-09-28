@@ -124,11 +124,13 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
             if is_inside_face:
                 screen[y][x] = ascii_list[-1]
 
+
 def draw_fps(real_fps, screen):
     text = "FPS: {value}".format(value="{:.2f}".format(real_fps))
     size = len(text)
     for idx, char in enumerate(text):
         screen[-10][len(screen[-1])-size+idx-10] = char
+
 
 def draw_screen(screen_data):
     h, w = (len(screen_data), len(screen_data[0]))
@@ -140,9 +142,11 @@ def draw_screen(screen_data):
             else:
                 print(' ', end='')
 
+
 def hide_cursor():
     sys.stdout.write("\033[?25l")
     sys.stdout.flush()
+
 
 def show_cursor():
     sys.stdout.write("\033[?25h")
