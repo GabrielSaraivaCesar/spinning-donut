@@ -4,15 +4,19 @@ import terminal_drawing
 import time
 import sys, signal
 
-def draw(model, cam, fps=None):
-    screen = terminal_drawing.get_screen_matrix()
+def draw(model, cam, screen, fps=None):
+    
     faces = model.depth_sort_faces(cam)
+    affected_coords = []
     for face in faces:
-        terminal_drawing.draw_face_on_screen(face, cam, screen, ASCII_LIST)
+        if face:
+            affected_coords += terminal_drawing.draw_face_on_screen(face, cam, screen, ASCII_LIST)
     
     if fps is not None:
         terminal_drawing.draw_fps(fps, screen)
     terminal_drawing.draw_screen(screen)
+    for coord in affected_coords: # No need to iterate through all the matrix. Only the pixels that were changed
+        screen[coord[1]][coord[0]] = None
 
 def sgint_handler(signal, frame):
     terminal_drawing.show_cursor()
@@ -36,7 +40,7 @@ def setup_camera(cam):
 
     cam.recording_surface_size.x = 1
     cam.recording_surface_size.y = 1
-    cam.recording_surface_size.z = 0.5
+    cam.recording_surface_size.z = 1
 
 SAVE_LOGS = False
 TARGET_FPS = 1000
@@ -45,33 +49,41 @@ terminal_drawing.hide_cursor()
 signal.signal(signal.SIGINT, sgint_handler)
 
 cube = factory_3d.cube_factory(3)
-toroid = factory_3d.toroid_factory(2, 1, resolution=50)
+toroid = factory_3d.toroid_factory(2, 1, resolution=20)
 pyramid = factory_3d.pyramid_factory(4, 3)
+# shuttle = factory_3d.import_model("3d_models/shuttle.obj")
 cam = utils_3d.Camera(utils_3d.Vertex(0, 0, -5))
+light_source = utils_3d.Vertex(10, -10, -10)
+light_intensity = 1
 setup_camera(cam)
 
 
-active_model = pyramid
-r = 0
+active_model = toroid
+r = 164.9228868484497
 
 # FPS Measure
 real_fps = 0
 frame_count = 0
 execution_start = time.time()
-last_time = 0
-
+last_time = None
+screen = terminal_drawing.get_screen_matrix()
 while True:
     current_time = time.time()
-    delta_time = current_time - last_time
-    real_fps = 1/delta_time
+    if last_time is None:
+        delta_time = 0
+    else:
+        delta_time = current_time - last_time
+    
+    if delta_time > 0:
+        real_fps = 1/delta_time
     last_time = current_time
 
     exec_time = time.time()
-    screen = draw(active_model, cam, real_fps)
-    active_model.rotate_to(y=r)
-    r+= 10 * delta_time
+    draw(active_model, cam, screen, real_fps)
+    active_model.rotate_to(y=r, x=r)
+    active_model.apply_light_source(light_source, light_intensity)
+    r += 10 * delta_time
     exec_time = time.time()-exec_time
-
     sleep_time = 1/TARGET_FPS
     if exec_time < sleep_time:
         sleep_time -= exec_time # Account for execution time

@@ -29,7 +29,8 @@ def generate_ascii_list():
 
     # Create a sorted list of characters
     sorted_chars = [char for char, _ in char_pixel_values_sorted]
-    return sorted_chars
+
+    return [" "] + sorted_chars
 
 
 def get_screen_matrix():
@@ -71,8 +72,11 @@ def get_bounding_box_from_virtual_vertices(vertices):
 def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
     h, w = (len(screen), len(screen[0]))
 
-    vertices_screen_virtual_coords = []
+    affected_coords = []
 
+    ascii_char = ascii_list[int(face.light_value * (len(ascii_list) - 1))]
+
+    vertices_screen_virtual_coords = []
     for vertex in face.vertices:
         projection = cam.project_vertex(vertex, return_relative_coords=True)
         translated_range = Vertex()
@@ -87,7 +91,8 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
         )
         if screen_y >= h or screen_x >= w or screen_y < 0 or screen_x < 0:
             continue
-        screen[screen_y][screen_x] = ascii_list[-1]
+        screen[screen_y][screen_x] = ascii_char
+        affected_coords.append((screen_x, screen_y))
     
     triangles = []
     if len(vertices_screen_virtual_coords) == 3:
@@ -129,26 +134,30 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
                     is_inside_face = True
                     break
             if is_inside_face:
-                screen[y][x] = ascii_list[-1]
+                screen[y][x] = ascii_char
+                affected_coords.append((x, y))
 
+    return affected_coords
 
 def draw_fps(real_fps, screen):
     text = "FPS: {value}".format(value="{:.2f}".format(real_fps))
     size = len(text)
     for idx, char in enumerate(text):
-        screen[-10][len(screen[-1])-size+idx-10] = char
+        screen[len(screen)-10][len(screen[-1])-size+idx-10] = char
 
 
 def draw_screen(screen_data):
     h, w = (len(screen_data), len(screen_data[0]))
-    print("\033[0;0H", end='')  # Move cursor to top-left
+    # sys.stdout.write("\033[2J")  # Clear the terminal screen
+    sys.stdout.write("\033[0;0H")  # Move cursor to top-left
+
     for y in range(h):
         for x in range(w):
             if screen_data[y][x] is not None:
-               print(screen_data[y][x], end='')
+                sys.stdout.write(screen_data[y][x])
             else:
-                print(' ', end='')
-
+                sys.stdout.write(' ')
+    sys.stdout.flush()
 
 def hide_cursor():
     sys.stdout.write("\033[?25l")

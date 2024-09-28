@@ -1,5 +1,6 @@
 
 from lib_3d import utils_3d
+import trimesh
 import math
 
 
@@ -69,16 +70,18 @@ def cube_factory(size: float) -> utils_3d.Model:
 
     # Define faces (each face is a quad made up of 4 vertices)
     faces = [
-        utils_3d.Face(vertices[0], vertices[1], vertices[2], vertices[3]),  # Bottom face
-        utils_3d.Face(vertices[4], vertices[5], vertices[6], vertices[7]),  # Top face
-        utils_3d.Face(vertices[0], vertices[1], vertices[5], vertices[4]),  # Front face
-        utils_3d.Face(vertices[2], vertices[3], vertices[7], vertices[6]),  # Back face
-        utils_3d.Face(vertices[1], vertices[2], vertices[6], vertices[5]),  # Right face
-        utils_3d.Face(vertices[0], vertices[3], vertices[7], vertices[4]),  # Left face
+        utils_3d.Face(vertices[0], vertices[1], vertices[2], vertices[3]),  # Front face
+        # utils_3d.Face(vertices[4], vertices[5], vertices[6], vertices[7]),  # Back face
+        # utils_3d.Face(vertices[0], vertices[1], vertices[5], vertices[4]),  # Top face
+        # utils_3d.Face(vertices[2], vertices[3], vertices[7], vertices[6]),  # Bottom face
+        # utils_3d.Face(vertices[1], vertices[2], vertices[6], vertices[5]),  # Right face
+        # utils_3d.Face(vertices[0], vertices[3], vertices[7], vertices[4])  # Left face
     ]
 
     # Create and return the cube model
     model = utils_3d.Model(faces)
+    # faces[2].recalculate_normal(model, flip=True)
+
     model.name = "Cube"
     return model
 
@@ -111,3 +114,34 @@ def pyramid_factory(base_size:float, height:float) -> utils_3d.Model:
     model = utils_3d.Model(faces)
     model.name = "Pyramid"
     return model
+
+
+def import_model(path):
+    # Load the .obj file
+    mesh = trimesh.load(path, force="mesh")
+    vertices = []
+    faces = []
+
+    for vertex in mesh.vertices:
+        vertices.append(
+            utils_3d.Vertex(
+                vertex[0],
+                vertex[1],
+                vertex[2],
+            )
+        )
+    
+    for face in mesh.faces:
+        v1 = vertices[face[0]]
+        v2 = vertices[face[1]]
+        v3 = vertices[face[2]]
+        faces.append(
+            utils_3d.Face(
+                v1, v2, v3
+            )
+        )
+    
+    model = utils_3d.Model(faces)
+    model.name = path
+    return model
+
