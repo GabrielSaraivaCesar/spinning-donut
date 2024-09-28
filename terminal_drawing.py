@@ -82,13 +82,12 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
         
         screen_x = int(translated_range.x * w)
         screen_y = int(translated_range.y * h)
-        if screen_y >= h or screen_x >= w or screen_y < 0 or screen_x < 0:
-            continue
-        screen[screen_y][screen_x] = ascii_list[-1]
         vertices_screen_virtual_coords.append(
             Vertex(x=screen_x, y=screen_y)
         )
-
+        if screen_y >= h or screen_x >= w or screen_y < 0 or screen_x < 0:
+            continue
+        screen[screen_y][screen_x] = ascii_list[-1]
     
     triangles = []
     if len(vertices_screen_virtual_coords) == 3:
