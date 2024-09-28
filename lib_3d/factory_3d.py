@@ -81,3 +81,33 @@ def cube_factory(size: float) -> utils_3d.Model:
     model = utils_3d.Model(faces)
     model.name = "Cube"
     return model
+
+
+def pyramid_factory(base_size:float, height:float) -> utils_3d.Model:
+    """
+    Generates a pyramid with a given base size and height.
+    """
+    
+    # Half size to center the square at the origin
+    half_size = base_size / 2
+    half_height = height / 2
+    top_vertex = utils_3d.Vertex(y=-half_height*2) # V0
+
+    base_vertices = [
+        utils_3d.Vertex(-half_size, half_height, -half_size),  # V0
+        utils_3d.Vertex( half_size, half_height, -half_size),   # V1
+        utils_3d.Vertex( half_size, half_height,  half_size),    # V2
+        utils_3d.Vertex(-half_size, half_height,  half_size),   # V3
+    ]
+
+    faces = [
+        utils_3d.Face(*base_vertices),
+        utils_3d.Face(base_vertices[0], base_vertices[1], top_vertex),
+        utils_3d.Face(base_vertices[1], base_vertices[2], top_vertex),
+        utils_3d.Face(base_vertices[2], base_vertices[3], top_vertex),
+        utils_3d.Face(base_vertices[3], base_vertices[0], top_vertex),
+    ]
+
+    model = utils_3d.Model(faces)
+    model.name = "Pyramid"
+    return model

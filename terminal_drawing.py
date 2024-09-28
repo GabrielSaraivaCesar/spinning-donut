@@ -104,6 +104,14 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
 
     # Get the bounding box relative to the pixels where the vertices are
     bounding_box = get_bounding_box_from_virtual_vertices(vertices_screen_virtual_coords)
+    if bounding_box['max_x'] >= w:
+        bounding_box['max_x'] = w-1
+    if bounding_box['max_y'] >= h:
+        bounding_box['max_y'] = h-1
+    if bounding_box['min_x'] < 0:
+        bounding_box['min_x'] = 0
+    if bounding_box['min_y'] < 0:
+        bounding_box['min_y'] = 0
     x_range = bounding_box['max_x'] - bounding_box['min_x']
     y_range = bounding_box['max_y'] - bounding_box['min_y']
     

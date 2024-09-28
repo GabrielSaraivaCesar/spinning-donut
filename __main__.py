@@ -44,13 +44,14 @@ ASCII_LIST = terminal_drawing.generate_ascii_list()
 terminal_drawing.hide_cursor()
 signal.signal(signal.SIGINT, sgint_handler)
 
-cube = factory_3d.cube_factory(2)
+cube = factory_3d.cube_factory(3)
 toroid = factory_3d.toroid_factory(2, 1, resolution=50)
-cam = utils_3d.Camera(utils_3d.Vertex(0, 0, -4))
+pyramid = factory_3d.pyramid_factory(4, 3)
+cam = utils_3d.Camera(utils_3d.Vertex(0, 0, -5))
 setup_camera(cam)
 
 
-active_model = toroid
+active_model = pyramid
 r = 0
 
 # FPS Measure
@@ -67,7 +68,7 @@ while True:
 
     exec_time = time.time()
     screen = draw(active_model, cam, real_fps)
-    active_model.rotate_to(y=r, x=r, z=-1*r)
+    active_model.rotate_to(y=r)
     r+= 10 * delta_time
     exec_time = time.time()-exec_time
 
