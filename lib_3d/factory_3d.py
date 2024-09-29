@@ -44,20 +44,12 @@ def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Mesh:
 
     # Create faces using quads_factory
     faces = _toroid_quads_factory(vertices, resolution)
-<<<<<<< HEAD
     mesh = utils_3d.Mesh(faces)
-=======
-    mesh = utils_3d.Meshe(faces)
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     mesh.name = "Toroid"
     return mesh
 
 
-<<<<<<< HEAD
 def cube_factory(size: float) -> utils_3d.Mesh:
-=======
-def cube_factory(size: float) -> utils_3d.Meshe:
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     """
     Generates a cube with a given size.
     """
@@ -87,22 +79,14 @@ def cube_factory(size: float) -> utils_3d.Meshe:
     ]
 
     # Create and return the cube mesh
-<<<<<<< HEAD
     mesh = utils_3d.Mesh(faces)
-=======
-    mesh = utils_3d.Meshe(faces)
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     # faces[2].recalculate_normal(mesh, flip=True)
 
     mesh.name = "Cube"
     return mesh
 
 
-<<<<<<< HEAD
 def pyramid_factory(base_size:float, height:float) -> utils_3d.Mesh:
-=======
-def pyramid_factory(base_size:float, height:float) -> utils_3d.Meshe:
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     """
     Generates a pyramid with a given base size and height.
     """
@@ -127,11 +111,7 @@ def pyramid_factory(base_size:float, height:float) -> utils_3d.Meshe:
         utils_3d.Face(base_vertices[3], base_vertices[0], top_vertex),
     ]
 
-<<<<<<< HEAD
     mesh = utils_3d.Mesh(faces)
-=======
-    mesh = utils_3d.Meshe(faces)
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     faces[0].recalculate_normal(mesh, flip=True)
     mesh.name = "Pyramid"
     return mesh
@@ -162,11 +142,7 @@ def import_mesh(path):
             )
         )
     
-<<<<<<< HEAD
     mesh = utils_3d.Mesh(faces)
-=======
-    mesh = utils_3d.Meshe(faces)
->>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
     mesh.name = path
     return mesh
 
