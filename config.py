@@ -4,11 +4,11 @@ from enum import Enum, auto as a
 # Fps counter on the right-bottom side of the render
 ENABLE_FPS_COUNTER = True
 
-# Mark a pixel as dirty when it changes, so only the changed pixels need to be updated. Uses more memory. (TODO: Optimize)
-ENABLE_DIRTY_RECTANGLES = True 
+# Mark a pixel as dirty when it changes, so only the changed pixels need to be updated. Uses more memory. (TODO: Revisit Implementation)
+ENABLE_DIRTY_RECTANGLES = False 
 
 # Only project visible faces, ignore faces that are facing away from the camera (TODO: Change the normal face calculation)
-ENABLE_BACKFACE_CULLING = False
+ENABLE_BACKFACE_CULLING = True
 
 # Enables object rotation and camera movement 
 ENABLE_USER_CONTROL = True
@@ -33,7 +33,7 @@ LIGHT_SOURCE = {
 }
 
 
-class AvailableModels(Enum):
+class AvailableMeshes(Enum):
     CUBE = a()
     TOROID = a()
     TOROID_HIGH_POLY = a()
@@ -41,4 +41,4 @@ class AvailableModels(Enum):
     SHUTTLE = a()
     
 
-ACTIVE_MODEL=AvailableModels.TOROID_HIGH_POLY
+ACTIVE_MODEL=AvailableMeshes.TOROID_HIGH_POLY

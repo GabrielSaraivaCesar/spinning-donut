@@ -1,6 +1,6 @@
 # Blender 3.4.1
 # www.blender.org
-mtllib prod_model.mtl
+mtllib prod_mesh.mtl
 o Icosphere
 v -13.394616 -4.906725 1.631776
 v -13.082417 -4.740908 1.858599

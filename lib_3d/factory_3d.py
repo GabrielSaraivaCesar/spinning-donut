@@ -21,7 +21,7 @@ def _toroid_quads_factory(vertices: list[utils_3d.Face], resolution: int) -> lis
     return faces
 
 
-def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Model:
+def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Mesh:
     """
     This function returns the vertices and faces of a torus.
     """
@@ -44,12 +44,12 @@ def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Model:
 
     # Create faces using quads_factory
     faces = _toroid_quads_factory(vertices, resolution)
-    model = utils_3d.Model(faces)
-    model.name = "Toroid"
-    return model
+    mesh = utils_3d.Mesh(faces)
+    mesh.name = "Toroid"
+    return mesh
 
 
-def cube_factory(size: float) -> utils_3d.Model:
+def cube_factory(size: float) -> utils_3d.Mesh:
     """
     Generates a cube with a given size.
     """
@@ -78,15 +78,15 @@ def cube_factory(size: float) -> utils_3d.Model:
         utils_3d.Face(vertices[0], vertices[3], vertices[7], vertices[4])  # Left face
     ]
 
-    # Create and return the cube model
-    model = utils_3d.Model(faces)
-    # faces[2].recalculate_normal(model, flip=True)
+    # Create and return the cube mesh
+    mesh = utils_3d.Mesh(faces)
+    # faces[2].recalculate_normal(mesh, flip=True)
 
-    model.name = "Cube"
-    return model
+    mesh.name = "Cube"
+    return mesh
 
 
-def pyramid_factory(base_size:float, height:float) -> utils_3d.Model:
+def pyramid_factory(base_size:float, height:float) -> utils_3d.Mesh:
     """
     Generates a pyramid with a given base size and height.
     """
@@ -111,13 +111,13 @@ def pyramid_factory(base_size:float, height:float) -> utils_3d.Model:
         utils_3d.Face(base_vertices[3], base_vertices[0], top_vertex),
     ]
 
-    model = utils_3d.Model(faces)
-    faces[0].recalculate_normal(model, flip=True)
-    model.name = "Pyramid"
-    return model
+    mesh = utils_3d.Mesh(faces)
+    faces[0].recalculate_normal(mesh, flip=True)
+    mesh.name = "Pyramid"
+    return mesh
 
 
-def import_model(path):
+def import_mesh(path):
     # Load the .obj file
     mesh = trimesh.load(path, force="mesh")
     vertices = []
@@ -142,7 +142,7 @@ def import_model(path):
             )
         )
     
-    model = utils_3d.Model(faces)
-    model.name = path
-    return model
+    mesh = utils_3d.Mesh(faces)
+    mesh.name = path
+    return mesh
 
