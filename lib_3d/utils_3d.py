@@ -1,5 +1,5 @@
 import math
-
+import config
 
 class Vertex:
 
@@ -361,10 +361,12 @@ class Model:
 
 
         faces = []
-        for f in self.faces:
-            if backface_culling(f):
-                faces.append(f)
-
+        if config.ENABLE_BACKFACE_CULLING:
+            for f in self.faces:
+                if backface_culling(f):
+                    faces.append(f)
+        else:
+            faces = self.faces
         # print(f"{len(faces)}/{len(self.faces)}")
         return sorted(faces, key=lambda x: score_face(x), reverse=True)
     
@@ -381,3 +383,12 @@ class Model:
             adjusted_intensity = adjusted_intensity*angle_modifier
             face.light_value = adjusted_intensity
 
+
+def setup_camera(cam):
+    # Camera settings
+    cam.display_size.y = config.CAMERA_SETTINGS.get('CHAR_HEIGHT/WIDTH_PROPORTION', 2)
+    cam.display_size.x = 1
+    sensor_size = config.CAMERA_SETTINGS.get('RECORDING_SENSOR_SIZE', (1, 1, 2))
+    cam.recording_surface_size.x = sensor_size[0]
+    cam.recording_surface_size.y = sensor_size[1]
+    cam.recording_surface_size.z = sensor_size[2]

@@ -11,7 +11,7 @@ This is temporary log runing the code on my own computer. The idea is to compare
 ## Version 1.1
 | 3D Model Name | Faces | Average FPS |
 |--|--|--|
-| Toroid | 2500 | 10.50 |
 | Toroid | 400 | 41.34 |
+| Toroid | 2500 | 10.50 |
 | Cube | 6 | 128.66 |
 | Pyramid | 5 | 118.97 |

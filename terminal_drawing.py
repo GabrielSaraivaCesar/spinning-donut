@@ -2,6 +2,7 @@ import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
 import string
+import config
 from lib_3d.utils_3d import Camera, Vertex, Face
 
 def generate_ascii_list():
@@ -94,7 +95,8 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
         if screen_y >= h or screen_x >= w or screen_y < 0 or screen_x < 0:
             continue
         screen[screen_y][screen_x] = ascii_char
-        affected_coords.append((screen_x, screen_y))
+        if config.ENABLE_DIRTY_RECTANGLES:
+            affected_coords.append((screen_x, screen_y))
     
     triangles = []
     if len(vertices_screen_virtual_coords) == 3:
@@ -137,7 +139,8 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
                     break
             if is_inside_face:
                 screen[y][x] = ascii_char
-                affected_coords.append((x, y))
+                if config.ENABLE_DIRTY_RECTANGLES:
+                    affected_coords.append((x, y))
 
     return affected_coords
 
