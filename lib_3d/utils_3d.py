@@ -52,6 +52,7 @@ class Face:
     """
     Defines a face of a 3D object as a quad.
     """
+
     
     @property
     def v1(self):
@@ -69,11 +70,15 @@ class Face:
 
     def __init__(self, v1:Vertex, v2:Vertex, v3:Vertex, v4:Vertex=None) -> None:
         self.vertices = [v1, v2, v3] + ([v4] if v4 else [])
-        self.center = self.calculate_center()
         self.rotation = Vertex()
         self.light_value = 0 # 0 to 1
         self.normal = Vertex()
+        self.center = Vertex()
+        self.calculate_center()
+        self.force_normal_flip = False
 
+    def set_model(self, model):
+        self.model:Model = model
     
     def __str__(self) -> str:
         return f"<Face: {self.v1}, {self.v2}, {self.v3}, {self.v4}>"
@@ -118,6 +123,11 @@ class Face:
                 n_x = -n_x
                 n_y = -n_y
                 n_z = -n_z
+        
+        if self.force_normal_flip == True:
+            n_x = -n_x
+            n_y = -n_y
+            n_z = -n_z
 
         # Set the normal vector 0.01 units away from the center
         offset_length = 0.01
@@ -132,14 +142,22 @@ class Face:
         self.calculate_normal(model.center)
 
     def calculate_center(self):
-        vertices = 4 if self.v4 else 3
-        x = (self.v1.x + self.v2.x + self.v3.x + (self.v4.x if self.v4 else 0)) / vertices
-        y = (self.v1.y + self.v2.y + self.v3.y + (self.v4.y if self.v4 else 0)) / vertices
-        z = (self.v1.z + self.v2.z + self.v3.z + (self.v4.z if self.v4 else 0)) / vertices
-        return Vertex(x, y, z)
+        sum_x, sum_y, sum_z = 0,0,0
+        amount_of_vertices = len(self.vertices)
+        for vertex in self.vertices:
+            sum_x += vertex.x
+            sum_y += vertex.y
+            sum_z += vertex.z
+        
+        sum_x /= amount_of_vertices
+        sum_y /= amount_of_vertices
+        sum_z /= amount_of_vertices
+
+        self.center.x = sum_x
+        self.center.y = sum_y
+        self.center.z = sum_z
+        
     
-    def update_center(self):
-        self.center = self.calculate_center()
 
     def move_to(self, x:float, y:float, z:float):
         relative_change = Vertex(x - self.center.x, y - self.center.y, z - self.center.z)
@@ -151,57 +169,6 @@ class Face:
             new_vertex_y = vertex.y + relative_change.y
             new_vertex_z = vertex.z + relative_change.z
             vertex.move_to(new_vertex_x, new_vertex_y, new_vertex_z)
-
-    def rotate_to(self, x: float = None, y: float = None, z: float = None):
-        x_diff, y_diff, z_diff = 0, 0, 0
-        
-        # Calculate rotation differences
-        if x is not None:
-            x_diff = (x - self.rotation.x) * math.pi / 180  # Convert to radians
-            self.rotation.x = x
-        
-        if y is not None:
-            y_diff = (y - self.rotation.y) * math.pi / 180  # Convert to radians
-            self.rotation.y = y
-        
-        if z is not None:
-            z_diff = (z - self.rotation.z) * math.pi / 180  # Convert to radians
-            self.rotation.z = z
-
-        # To avoid recalculating the normal, we can put it on the list as a vertex. it will be rotated as it is supposed to
-        vertices_list = [*self.vertices, self.normal]
-
-        # Rotate each vertex
-        for vertex in vertices_list:
-            # Translate vertex to origin (relative to center)
-            dx = vertex.x - self.center.x
-            dy = vertex.y - self.center.y
-            dz = vertex.z - self.center.z
-            
-            # Rotate around Z-axis (affects x and y)
-            if z_diff:
-                new_dx = dx * math.cos(z_diff) - dy * math.sin(z_diff)
-                new_dy = dx * math.sin(z_diff) + dy * math.cos(z_diff)
-                dx, dy = new_dx, new_dy
-            
-            # Rotate around Y-axis (affects x and z)
-            if y_diff:
-                new_dx = dx * math.cos(y_diff) + dz * math.sin(y_diff)
-                new_dz = -dx * math.sin(y_diff) + dz * math.cos(y_diff)
-                dx, dz = new_dx, new_dz
-
-            # Rotate around X-axis (affects y and z)
-            if x_diff:
-                new_dy = dy * math.cos(x_diff) - dz * math.sin(x_diff)
-                new_dz = dy * math.sin(x_diff) + dz * math.cos(x_diff)
-                dy, dz = new_dy, new_dz
-
-            # Translate vertex back to original position relative to center
-            vertex.x = dx + self.center.x
-            vertex.y = dy + self.center.y
-            vertex.z = dz + self.center.z
-        
-
     
 class Camera:
 
@@ -246,31 +213,45 @@ class Camera:
 class Model:
 
     def __init__(self, faces:list[Face]) -> None:
-        self.faces = faces
-        self.center = self.calculate_center()
+        self.faces:list[Face] = faces
+        self.computed_vertices_list:list[Vertex] = []
+        self.computed_normals_list:list[Vertex] = []
+        for face in faces:
+            for vertex in face.vertices:
+                if vertex not in self.computed_vertices_list:
+                    self.computed_vertices_list.append(vertex)
+            self.computed_normals_list.append(face.normal)
+            face.set_model(self)
+
+        self.center:Vertex = Vertex()
+        self.calculate_center()
         for face in faces:
             face.calculate_normal(self.center)
+
         self.rotation = Vertex()
-        self.name = ""
+        self.name:str = ""
 
     def __str__(self) -> str:
         return f"<Model with {len(self.faces)} faces>"
 
-    def calculate_center(self):
-        x = 0
-        y = 0
-        z = 0
-        for face in self.faces:
-            x += face.center.x
-            y += face.center.y
-            z += face.center.z
-        x /= len(self.faces)
-        y /= len(self.faces)
-        z /= len(self.faces)
-        return Vertex(x, y, z)
     
-    def update_center(self):
-        self.center = self.calculate_center()
+    
+    def calculate_center(self):
+        sum_x, sum_y, sum_z = 0,0,0
+        amount_of_vertices = len(self.computed_vertices_list)
+        for vertex in self.computed_vertices_list:
+            sum_x += vertex.x
+            sum_y += vertex.y
+            sum_z += vertex.z
+        
+        sum_x /= amount_of_vertices
+        sum_y /= amount_of_vertices
+        sum_z /= amount_of_vertices
+
+        self.center.x = sum_x
+        self.center.y = sum_y
+        self.center.z = sum_z
+        
 
     def move_to(self, x:float=0, y:float=0, z:float=0):
         relative_change = Vertex(x - self.center.x, y - self.center.y, z - self.center.z)
@@ -284,51 +265,83 @@ class Model:
             face.move_to(new_face_x, new_face_y, new_face_z)
 
     def rotate_to(self, x: float = None, y: float = None, z: float = None):
-        x_diff, y_diff, z_diff = 0, 0, 0
+        """
+        Rotate the whole model based on rotation matrix https://en.wikipedia.org/wiki/Rotation_matrix (check the 3D Section)
+        Rx = [
+            [1  0      0 ]
+            [0 cosθ -sinθ]
+            [0 sinθ  cosθ]
+        ]
+        Ry = [
+            [cosθ  0  sinθ]
+            [0     1    0 ]
+            [-sinθ 0  cosθ]
+        ]
+        Rz = [
+            [cosθ -sinθ 0]
+            [sinθ  cosθ 0]
+            [0      0   1]
+        ]
+        """
+        pivot = self.center
+        theta_x, theta_y, theta_z = 0, 0, 0
         
-        # Calculate rotation differences in radians
+
+        # Calculate rotation differences
         if x is not None:
-            x_diff = (x - self.rotation.x) * math.pi / 180
+            theta_x = (x - self.rotation.x) * math.pi / 180  # Convert to radians
             self.rotation.x = x
         
         if y is not None:
-            y_diff = (y - self.rotation.y) * math.pi / 180
+            theta_y = (y - self.rotation.y) * math.pi / 180  # Convert to radians
             self.rotation.y = y
         
         if z is not None:
-            z_diff = (z - self.rotation.z) * math.pi / 180
+            theta_z = (z - self.rotation.z) * math.pi / 180  # Convert to radians
             self.rotation.z = z
 
-        # Rotate each face of the model
-        for face in self.faces:
-            # Translate face center to origin relative to model center
-            dx = face.center.x - self.center.x
-            dy = face.center.y - self.center.y
-            dz = face.center.z - self.center.z
-            
-            # Rotate around Z-axis (affects x and y)
-            if z_diff:
-                new_dx = dx * math.cos(z_diff) - dy * math.sin(z_diff)
-                new_dy = dx * math.sin(z_diff) + dy * math.cos(z_diff)
-                dx, dy = new_dx, new_dy
-            
-            # Rotate around Y-axis (affects x and z)
-            if y_diff:
-                new_dx = dx * math.cos(y_diff) + dz * math.sin(y_diff)
-                new_dz = -dx * math.sin(y_diff) + dz * math.cos(y_diff)
-                dx, dz = new_dx, new_dz
-            
-            # Rotate around X-axis (affects y and z)
-            if x_diff:
-                new_dy = dy * math.cos(x_diff) - dz * math.sin(x_diff)
-                new_dz = dy * math.sin(x_diff) + dz * math.cos(x_diff)
-                dy, dz = new_dy, new_dz
 
-            # Translate face center back to original position relative to model center
-            face.move_to(dx + self.center.x, dy + self.center.y, dz + self.center.z)
-            
-            # Now rotate the face itself around its own center
-            face.rotate_to(x, y, z)
+        # To avoid recalculating the normal, we can put it on the list as a vertex. it will be rotated as it is supposed to
+        vertices_list = self.computed_normals_list + self.computed_vertices_list
+
+        # Rotate each vertex
+        for vertex in vertices_list:
+            # Translate vertex to origin (relative to center)
+            dx = vertex.x - pivot.x
+            dy = vertex.y - pivot.y
+            dz = vertex.z - pivot.z
+
+
+            if theta_x != 0:
+                cos_theta_x = math.cos(theta_x)
+                sin_theta_x = math.sin(theta_x)
+                ny = dy * cos_theta_x - dz * sin_theta_x
+                nz = dy * sin_theta_x + dz * cos_theta_x
+                dy = ny
+                dz = nz
+                
+            if theta_y != 0:
+                cos_theta_y = math.cos(theta_y)
+                sin_theta_y = math.sin(theta_y)
+                nx = dx * cos_theta_y + dz * sin_theta_y
+                nz = -dx * sin_theta_y + dz * cos_theta_y
+                dx = nx
+                dz = nz
+                
+            if theta_z != 0:
+                cos_theta_z = math.cos(theta_z)
+                sin_theta_z = math.sin(theta_z)
+                nx = dx * cos_theta_z - dy * sin_theta_z
+                ny = dx * sin_theta_z + dy * cos_theta_z
+                dx = nx
+                dy = ny
+
+            vertex.x = dx + pivot.x
+            vertex.y = dy + pivot.y
+            vertex.z = dz + pivot.z
+        
+        for face in self.faces:
+            face.calculate_center()
 
     def depth_sort_faces(self, camera:Camera):
         def backface_culling(face:Face):

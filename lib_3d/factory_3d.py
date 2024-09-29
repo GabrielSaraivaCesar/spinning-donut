@@ -112,6 +112,7 @@ def pyramid_factory(base_size:float, height:float) -> utils_3d.Model:
     ]
 
     model = utils_3d.Model(faces)
+    faces[0].recalculate_normal(model, flip=True)
     model.name = "Pyramid"
     return model
 
