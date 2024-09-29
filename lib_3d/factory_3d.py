@@ -71,11 +71,11 @@ def cube_factory(size: float) -> utils_3d.Model:
     # Define faces (each face is a quad made up of 4 vertices)
     faces = [
         utils_3d.Face(vertices[0], vertices[1], vertices[2], vertices[3]),  # Front face
-        # utils_3d.Face(vertices[4], vertices[5], vertices[6], vertices[7]),  # Back face
-        # utils_3d.Face(vertices[0], vertices[1], vertices[5], vertices[4]),  # Top face
-        # utils_3d.Face(vertices[2], vertices[3], vertices[7], vertices[6]),  # Bottom face
-        # utils_3d.Face(vertices[1], vertices[2], vertices[6], vertices[5]),  # Right face
-        # utils_3d.Face(vertices[0], vertices[3], vertices[7], vertices[4])  # Left face
+        utils_3d.Face(vertices[4], vertices[5], vertices[6], vertices[7]),  # Back face
+        utils_3d.Face(vertices[0], vertices[1], vertices[5], vertices[4]),  # Top face
+        utils_3d.Face(vertices[2], vertices[3], vertices[7], vertices[6]),  # Bottom face
+        utils_3d.Face(vertices[1], vertices[2], vertices[6], vertices[5]),  # Right face
+        utils_3d.Face(vertices[0], vertices[3], vertices[7], vertices[4])  # Left face
     ]
 
     # Create and return the cube model

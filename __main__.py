@@ -80,11 +80,11 @@ pyramid = factory_3d.pyramid_factory(4, 3)
 # shuttle = factory_3d.import_model("3d_models/shuttle.obj")
 cam = utils_3d.Camera(utils_3d.Vertex(0, 0, -10))
 light_source = utils_3d.Vertex(10, -10, -10)
-light_intensity = 1
+light_intensity = 2
 setup_camera(cam)
 
 
-active_model = toroid
+active_model = cube
 rx = 0
 ry = 0
 rz = 0

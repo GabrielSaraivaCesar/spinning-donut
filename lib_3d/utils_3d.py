@@ -346,12 +346,11 @@ class Model:
     def depth_sort_faces(self, camera:Camera):
         def backface_culling(face:Face):
             face_angle_to_camera = Vertex.three_vertex_angle(face.center, face.normal, camera.position)
-            if face_angle_to_camera < 120:
+            if face_angle_to_camera < 90:
                 return True
             return False
 
         def score_face(face:Face):
-            
             d_s = 0
             d_s += Vertex.distance(face.v1, camera.position)
             d_s += Vertex.distance(face.v2, camera.position)
@@ -361,18 +360,18 @@ class Model:
             return d_s
 
 
-        # faces = []
-        # for f in self.faces:
-        #     if backface_culling(f):
-        #         faces.append(f)
-        return sorted(self.faces, key=lambda x: score_face(x), reverse=True)
+        faces = []
+        for f in self.faces:
+            if backface_culling(f):
+                faces.append(f)
+
+        # print(f"{len(faces)}/{len(self.faces)}")
+        return sorted(faces, key=lambda x: score_face(x), reverse=True)
     
     def apply_light_source(self, source:Vertex, intensity:float=1):
-        distance_modifier = 0.15
+        distance_modifier = 0.1
         for face in self.faces:
             adjusted_intensity = float(intensity)
-            if adjusted_intensity > 1:
-                adjusted_intensity = 1
             d = Vertex.distance(face.center, source)
             adjusted_intensity = adjusted_intensity / (d * distance_modifier)
             

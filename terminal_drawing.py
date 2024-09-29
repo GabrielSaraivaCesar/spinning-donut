@@ -73,8 +73,10 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
     h, w = (len(screen), len(screen[0]))
 
     affected_coords = []
-
-    ascii_char = ascii_list[int(face.light_value * (len(ascii_list) - 1))]
+    char_idx = int(face.light_value * (len(ascii_list) - 1))
+    if char_idx >= len(ascii_list):
+        char_idx = -1
+    ascii_char = ascii_list[char_idx]
 
     vertices_screen_virtual_coords = []
     for vertex in face.vertices:
