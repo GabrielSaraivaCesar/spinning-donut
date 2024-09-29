@@ -68,14 +68,14 @@ class Face:
         return self.vertices[3] if len(self.vertices) == 4 else None
     
 
-    def __init__(self, v1:Vertex, v2:Vertex, v3:Vertex, v4:Vertex=None) -> None:
+    def __init__(self, v1:Vertex, v2:Vertex, v3:Vertex, v4:Vertex=None, flip_normal=False) -> None:
         self.vertices = [v1, v2, v3] + ([v4] if v4 else [])
         self.rotation = Vertex()
         self.light_value = 0 # 0 to 1
         self.normal = Vertex()
         self.center = Vertex()
         self.calculate_center()
-        self.force_normal_flip = False
+        self.force_normal_flip = flip_normal
 
     def set_mesh(self, mesh):
         self.mesh:Mesh = mesh

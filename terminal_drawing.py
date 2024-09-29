@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 import string
 import config
 from lib_3d.utils_3d import Camera, Vertex, Face
+import random
 
 def generate_ascii_list():
     # Font settings (default system font)
@@ -155,7 +156,6 @@ def draw_screen(screen_data):
     h, w = (len(screen_data), len(screen_data[0]))
     # sys.stdout.write("\033[2J")  # Clear the terminal screen
     sys.stdout.write("\033[0;0H")  # Move cursor to top-left
-
     for y in range(h):
         for x in range(w):
             if screen_data[y][x] is not None:

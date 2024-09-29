@@ -4,7 +4,7 @@ import trimesh
 import math
 
 
-def _toroid_quads_factory(vertices: list[utils_3d.Face], resolution: int) -> list[utils_3d.Face]:
+def _toroid_quads_factory(vertices: list[utils_3d.Face], resolution: int, r:int) -> list[utils_3d.Face]:
     """
     Given a 2D grid of vertices, this function transforms them into quads,
     defining the faces of a 3D object.
@@ -17,7 +17,9 @@ def _toroid_quads_factory(vertices: list[utils_3d.Face], resolution: int) -> lis
             v2 = vertices[i][(j + 1) % resolution]
             v3 = vertices[(i + 1) % resolution][(j + 1) % resolution]
             v4 = vertices[(i + 1) % resolution][j]
-            faces.append(utils_3d.Face(v1, v2, v3, v4))
+            face = utils_3d.Face(v1, v2, v3, v4)
+            faces.append(face)
+
     return faces
 
 
@@ -43,8 +45,13 @@ def toroid_factory(R: float, r: float, resolution:float=20) -> utils_3d.Mesh:
             vertices[i][j] = vertex
 
     # Create faces using quads_factory
-    faces = _toroid_quads_factory(vertices, resolution)
+    faces = _toroid_quads_factory(vertices, resolution, r)
     mesh = utils_3d.Mesh(faces)
+    for face in faces:
+        d = utils_3d.Vertex.distance(face.center, mesh.center)
+        if d < 1.7:
+            face.recalculate_normal(mesh, flip=True) # this is a temporary fix. the normal calculation doesn't work well for complex objects like the toroid, so we need to flip the normal of some faces manually
+
     mesh.name = "Toroid"
     return mesh
 
@@ -112,7 +119,6 @@ def pyramid_factory(base_size:float, height:float) -> utils_3d.Mesh:
     ]
 
     mesh = utils_3d.Mesh(faces)
-    faces[0].recalculate_normal(mesh, flip=True)
     mesh.name = "Pyramid"
     return mesh
 
