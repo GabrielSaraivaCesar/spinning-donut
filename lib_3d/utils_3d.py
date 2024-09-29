@@ -212,7 +212,11 @@ class Camera:
             return Vertex(b.x/r.x, b.y/r.y, d.z)
         return b
     
+<<<<<<< HEAD
 class Mesh:
+=======
+class Meshe:
+>>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
 
     def __init__(self, faces:list[Face]) -> None:
         self.faces:list[Face] = faces
@@ -234,7 +238,11 @@ class Mesh:
         self.name:str = ""
 
     def __str__(self) -> str:
+<<<<<<< HEAD
         return f"<Mesh with {len(self.faces)} faces>"
+=======
+        return f"<Meshe with {len(self.faces)} faces>"
+>>>>>>> 93f88dc840d1ee72d6bfbda3fc2b17e149d28dd5
 
     
     
