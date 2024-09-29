@@ -77,13 +77,17 @@ class Face:
         self.calculate_center()
         self.force_normal_flip = False
 
-    def set_model(self, model):
-        self.model:Model = model
+    def set_mesh(self, mesh):
+        self.mesh:Meshe = mesh
     
     def __str__(self) -> str:
         return f"<Face: {self.v1}, {self.v2}, {self.v3}, {self.v4}>"
 
-    def calculate_normal(self, model_center=None):
+    def calculate_normal(self, mesh_center=None):
+        """
+        Calculate the normal vector of the face
+        The current implementation has known issues for determining complex mesh normals. TODO: Try implementing a raycast algorithm to count intersections
+        """
         # Calculate edge vectors for the normal calculation
         v1 = self.v1
         v2 = self.v2
@@ -106,17 +110,17 @@ class Face:
             n_y /= length
             n_z /= length
         
-        # If model center is provided, check if the normal needs to be flipped
-        if model_center:
-            # Vector from the face center to the model center
-            to_model_center = (
-                model_center.x - self.center.x,
-                model_center.y - self.center.y,
-                model_center.z - self.center.z
+        # If mesh center is provided, check if the normal needs to be flipped
+        if mesh_center:
+            # Vector from the face center to the mesh center
+            to_mesh_center = (
+                mesh_center.x - self.center.x,
+                mesh_center.y - self.center.y,
+                mesh_center.z - self.center.z
             )
 
-            # Dot product between normal and vector to model center
-            dot_product = (n_x * to_model_center[0]) + (n_y * to_model_center[1]) + (n_z * to_model_center[2])
+            # Dot product between normal and vector to mesh center
+            dot_product = (n_x * to_mesh_center[0]) + (n_y * to_mesh_center[1]) + (n_z * to_mesh_center[2])
             
             # If the dot product is positive, flip the normal
             if dot_product > 0:
@@ -137,9 +141,9 @@ class Face:
         
         return self
     
-    def recalculate_normal(self, model, flip=False):
+    def recalculate_normal(self, mesh, flip=False):
         self.force_normal_flip = flip
-        self.calculate_normal(model.center)
+        self.calculate_normal(mesh.center)
 
     def calculate_center(self):
         sum_x, sum_y, sum_z = 0,0,0
@@ -157,8 +161,6 @@ class Face:
         self.center.y = sum_y
         self.center.z = sum_z
         
-    
-
     def move_to(self, x:float, y:float, z:float):
         relative_change = Vertex(x - self.center.x, y - self.center.y, z - self.center.z)
         self.center.x = x
@@ -210,7 +212,7 @@ class Camera:
             return Vertex(b.x/r.x, b.y/r.y, d.z)
         return b
     
-class Model:
+class Meshe:
 
     def __init__(self, faces:list[Face]) -> None:
         self.faces:list[Face] = faces
@@ -221,7 +223,7 @@ class Model:
                 if vertex not in self.computed_vertices_list:
                     self.computed_vertices_list.append(vertex)
             self.computed_normals_list.append(face.normal)
-            face.set_model(self)
+            face.set_mesh(self)
 
         self.center:Vertex = Vertex()
         self.calculate_center()
@@ -232,7 +234,7 @@ class Model:
         self.name:str = ""
 
     def __str__(self) -> str:
-        return f"<Model with {len(self.faces)} faces>"
+        return f"<Meshe with {len(self.faces)} faces>"
 
     
     
@@ -266,7 +268,7 @@ class Model:
 
     def rotate_to(self, x: float = None, y: float = None, z: float = None):
         """
-        Rotate the whole model based on rotation matrix https://en.wikipedia.org/wiki/Rotation_matrix (check the 3D Section)
+        Rotate the whole mesh based on rotation matrix https://en.wikipedia.org/wiki/Rotation_matrix (check the 3D Section)
         Rx = [
             [1  0      0 ]
             [0 cosθ -sinθ]
