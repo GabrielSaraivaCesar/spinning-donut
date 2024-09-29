@@ -5,7 +5,7 @@ from enum import Enum, auto as a
 ENABLE_FPS_COUNTER = True
 
 # Mark a pixel as dirty when it changes, so only the changed pixels need to be updated. Uses more memory. (TODO: Optimize)
-ENABLE_DIRTY_RECTANGLES = True 
+ENABLE_DIRTY_RECTANGLES = False 
 
 # Only project visible faces, ignore faces that are facing away from the camera (TODO: Change the normal face calculation)
 ENABLE_BACKFACE_CULLING = False

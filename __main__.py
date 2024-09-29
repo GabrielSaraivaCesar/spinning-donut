@@ -32,17 +32,31 @@ def draw(model, cam, fps=None):
                 affected_coords += dirty_pixels
     
     if fps is not None:
-        terminal_drawing.draw_fps(fps, screen)
+        dirty_pixels = terminal_drawing.draw_fps(fps, screen)
+        if config.ENABLE_DIRTY_RECTANGLES:
+            affected_coords += dirty_pixels
 
+    if not config.ENABLE_DIRTY_RECTANGLES:
+        terminal_drawing.draw_screen(screen)
+        screen = terminal_drawing.get_screen_matrix()
 
+    # Clean last frame dirty pixels
+    negative_dirty_pixels = []
+    # if last_frame_dirty_pixels:
+    #     for coord in last_frame_dirty_pixels:
+    #         pixel = screen[coord[1]][coord[0]]
+    #         if pixel is None:
+    #             continue
+    #         if len(pixel) == 1: # Pixel is not marked to draw in this frame, so we can clear it
+    #             negative_dirty_pixels.append(coord)
+                
 
-    terminal_drawing.draw_screen(screen)
+    terminal_drawing.draw_screen(screen, affected_coords, negative_dirty_pixels)
     last_frame_dirty_pixels = affected_coords
 
-    screen = terminal_drawing.get_screen_matrix()
 
 def start():
-    global TARGET_FPS, ASCII_LIST, cam, light_source, light_intensity, active_model, rx, ry, rz, real_fps, frame_count, execution_start, last_time, screen
+    global TARGET_FPS, ASCII_LIST, cam, light_source, light_intensity, active_model, rx, ry, rz, real_fps, frame_count, execution_start, last_time, screen, last_frame_dirty_pixels
     TARGET_FPS = 1000 # TODO - REMOVE
 
     #-- terminal configs --#
@@ -74,6 +88,7 @@ def start():
     execution_start = time.time()
     last_time = None
     screen = terminal_drawing.get_screen_matrix()
+    last_frame_dirty_pixels=[]
 
 def update():
     update_rotation_values()

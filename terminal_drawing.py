@@ -94,10 +94,16 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
         )
         if screen_y >= h or screen_x >= w or screen_y < 0 or screen_x < 0:
             continue
-        screen[screen_y][screen_x] = ascii_char
+        
         if config.ENABLE_DIRTY_RECTANGLES:
             affected_coords.append((screen_x, screen_y))
-    
+            draw_mark = 1
+            if screen[screen_y][screen_x] is not None and screen[screen_y][screen_x][0] == ascii_char: # Pixel is the same as before, no change is needed here
+                draw_mark = 2 # means it is the same, so it should be skipped in the cleaning phase, but should also be skipped during render
+            screen[screen_y][screen_x] = [ascii_char, draw_mark] # [char, mark to draw]
+        else:
+            screen[screen_y][screen_x] = ascii_char
+
     triangles = []
     if len(vertices_screen_virtual_coords) == 3:
         triangles.append(vertices_screen_virtual_coords)
@@ -138,31 +144,57 @@ def draw_face_on_screen(face: Face, cam:Camera, screen, ascii_list):
                     is_inside_face = True
                     break
             if is_inside_face:
-                screen[y][x] = ascii_char
                 if config.ENABLE_DIRTY_RECTANGLES:
                     affected_coords.append((x, y))
+                    draw_mark = 1
+                    if screen[y][x] is not None and screen[y][x][0] == ascii_char: # Pixel is the same as before, no change is needed here
+                        draw_mark = 2 # means it is the same, so it should be skipped in the cleaning phase, but should also be skipped during render
+                    screen[y][x] = [ascii_char, draw_mark] # [char, mark to draw]
+                else:
+                    screen[y][x] = ascii_char 
 
     return affected_coords
 
 def draw_fps(real_fps, screen):
     text = "FPS: {value}".format(value="{:.2f}".format(real_fps))
     size = len(text)
+    y_pos = len(screen)-10
+    x_pos = len(screen[-1])-size-10
     for idx, char in enumerate(text):
-        screen[len(screen)-10][len(screen[-1])-size+idx-10] = char
+        screen[y_pos][x_pos+idx] = [char, 1]
 
+    affected_coords = []
+    for y in range(y_pos, len(screen)):
+        for x in range(x_pos, len(screen[-1])-10):
+            affected_coords.append((x, y))
 
-def draw_screen(screen_data):
+    return affected_coords
+
+def draw_screen(screen_data, coods_to_draw=None, coords_to_skip=None):
     h, w = (len(screen_data), len(screen_data[0]))
     # sys.stdout.write("\033[2J")  # Clear the terminal screen
-    sys.stdout.write("\033[0;0H")  # Move cursor to top-left
 
-    for y in range(h):
-        for x in range(w):
-            if screen_data[y][x] is not None:
-                sys.stdout.write(screen_data[y][x])
-            else:
-                sys.stdout.write(' ')
+    move_cursor(0, 0)  # Move cursor to top-left
+    if coods_to_draw == None or coords_to_skip == None: # If no further info was passed, just render the whole screen
+        for y in range(h):
+            for x in range(w):
+                pixel = screen_data[y][x]
+                if pixel is not None:
+                    sys.stdout.write(pixel[0])
+                else:
+                    sys.stdout.write(' ')
+    else:
+        for draw_coord in coods_to_draw:
+            x, y = draw_coord
+            pixel = screen_data[y][x]
+            if pixel is None: continue
+            move_cursor(x, y)
+            sys.stdout.write(pixel[0])
+
     sys.stdout.flush()
+
+def move_cursor(x, y): # 0, 0 is top left
+    sys.stdout.write(f"\033[{y};{x}H")
 
 def hide_cursor():
     sys.stdout.write("\033[?25l")
