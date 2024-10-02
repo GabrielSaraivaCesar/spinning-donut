@@ -11,6 +11,16 @@ class Vertex:
     def __str__(self) -> str:
         return f"<({self.x}, {self.y}, {self.z})>"
     
+
+    def __add__(self, other):
+        return Vertex(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other):
+        return Vertex(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __mul__(self, scalar: float):
+        return Vertex(self.x * scalar, self.y * scalar, self.z * scalar)
+    
     def move_to(self, x:float, y:float, z:float):
         self.x = x
         self.y = y
@@ -47,6 +57,84 @@ class Vertex:
         radians = math.acos(cos_theta)
         degrees = math.degrees(radians)
         return degrees
+    
+    @staticmethod
+    def dot(v1, v2):
+            return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
+
+    @staticmethod
+    def cross(v1, v2):
+        return Vertex(
+            v1.y * v2.z - v1.z * v2.y,
+            v1.z * v2.x - v1.x * v2.z,
+            v1.x * v2.y - v1.y * v2.x
+        )
+    
+
+    @staticmethod
+    def rotate_vertices_based_on_pivot_point(pivot, vertices_list, dx, dy, dz):
+        """
+        Rotate the whole mesh based on rotation matrix https://en.wikipedia.org/wiki/Rotation_matrix (check the 3D Section)
+        Rx = [
+            [1  0      0 ]
+            [0 cosθ -sinθ]
+            [0 sinθ  cosθ]
+        ]
+        Ry = [
+            [cosθ  0  sinθ]
+            [0     1    0 ]
+            [-sinθ 0  cosθ]
+        ]
+        Rz = [
+            [cosθ -sinθ 0]
+            [sinθ  cosθ 0]
+            [0      0   1]
+        ]
+        """
+        vertices_list:list[Vertex] = vertices_list
+        pivot:Vertex = pivot
+
+        theta_x = dx * math.pi / 180  # Convert to radians
+        theta_y = dy * math.pi / 180  # Convert to radians
+        theta_z = dz * math.pi / 180  # Convert to radians
+
+        # Rotate each vertex
+        for vertex in vertices_list:
+            # Translate vertex to origin (relative to center)
+            dx = vertex.x - pivot.x
+            dy = vertex.y - pivot.y
+            dz = vertex.z - pivot.z
+
+
+            if theta_x != 0:
+                cos_theta_x = math.cos(theta_x)
+                sin_theta_x = math.sin(theta_x)
+                ny = dy * cos_theta_x - dz * sin_theta_x
+                nz = dy * sin_theta_x + dz * cos_theta_x
+                dy = ny
+                dz = nz
+                
+            if theta_y != 0:
+                cos_theta_y = math.cos(theta_y)
+                sin_theta_y = math.sin(theta_y)
+                nx = dx * cos_theta_y + dz * sin_theta_y
+                nz = -dx * sin_theta_y + dz * cos_theta_y
+                dx = nx
+                dz = nz
+                
+            if theta_z != 0:
+                cos_theta_z = math.cos(theta_z)
+                sin_theta_z = math.sin(theta_z)
+                nx = dx * cos_theta_z - dy * sin_theta_z
+                ny = dx * sin_theta_z + dy * cos_theta_z
+                dx = nx
+                dy = ny
+
+            vertex.move_to(
+                dx + pivot.x,
+                dy + pivot.y,
+                dz + pivot.z
+            )
 
 class Face:
     """
@@ -83,7 +171,7 @@ class Face:
     def __str__(self) -> str:
         return f"<Face: {self.v1}, {self.v2}, {self.v3}, {self.v4}>"
 
-    def calculate_normal(self, mesh_center=None):
+    def calculate_normal(self, mesh_center=None, mesh=None):
         """
         Calculate the normal vector of the face
         The current implementation has known issues for determining complex mesh normals. TODO: Try implementing a raycast algorithm to count intersections
@@ -190,6 +278,7 @@ class Camera:
         """
         Projects a 3D vertex to a 2D vertex.
         """
+        epsilon = 1e-8 # Avoid divisions by 0
         # relative pos
         r = Vertex(vertex.x - self.position.x, vertex.y - self.position.y, vertex.z - self.position.z)
         rotation_sin = Vertex(x=math.sin(self.rotation.x), y=math.sin(self.rotation.y), z=math.sin(self.rotation.z))
@@ -205,16 +294,46 @@ class Camera:
         s = self.display_size
         r = self.recording_surface_size
         b = Vertex()
-        b.x = (d.x * s.x) / (d.z * r.x+ 0.00001) * r.z
-        b.y = (d.y * s.y) / (d.z * r.y+ 0.00001) * r.z
+        b.x = (d.x * s.x) / (d.z * r.x+ epsilon) * r.z * -1
+        b.y = (d.y * s.y) / (d.z * r.y+ epsilon) * r.z * -1
 
         if return_relative_coords:
             return Vertex(b.x/r.x, b.y/r.y, d.z)
         return b
     
+    def relative_move(self, dx:float=0, dy:float=0, dz:float=0):
+        rotation = self.rotation
+        rotation_sin = Vertex(x=math.sin(rotation.x), y=math.sin(rotation.y), z=math.sin(rotation.z))
+        rotation_cos = Vertex(x=math.cos(rotation.x), y=math.cos(rotation.y), z=math.cos(rotation.z))
+
+        # Calculate the relative movement
+        dx = rotation_cos.y * (rotation_sin.z * dy + rotation_cos.z * dx) - rotation_sin.y * dz
+        dy = rotation_sin.x * (rotation_cos.y * dz + rotation_sin.y * (rotation_sin.z * dy + rotation_cos.z * dx)) + rotation_cos.x * (rotation_cos.z * dy - rotation_sin.z * dx)
+        dz = rotation_cos.x * (rotation_cos.y * dz + rotation_sin.y * (rotation_sin.z * dy + rotation_cos.z * dx)) - rotation_sin.x * (rotation_cos.z * dy - rotation_sin.z * dx)
+
+        # Apply the relative movement
+        self.position.x += dx
+        self.position.y += dy
+        self.position.z += dz
+
+    def look_at_target(self, target: Vertex):
+        # Calculate the direction vector
+        direction = Vertex(
+            target.x - self.position.x,
+            target.y - self.position.y,
+            target.z - self.position.z
+        )
+        
+        # Calculate the horizontal distance in the x-z plane
+        horizontal_distance = math.sqrt(direction.x**2 + direction.z**2)
+        
+        # Calculate the rotation angles
+        self.rotation.x = math.atan2(direction.y, horizontal_distance)  # Pitch: up/down
+        self.rotation.y = math.atan2(direction.x, direction.z)          # Yaw: left/right
+        
 class Mesh:
 
-    def __init__(self, faces:list[Face]) -> None:
+    def __init__(self, faces:list[Face], calculate_normals=True) -> None:
         self.faces:list[Face] = faces
         self.computed_vertices_list:list[Vertex] = []
         self.computed_normals_list:list[Vertex] = []
@@ -227,8 +346,9 @@ class Mesh:
 
         self.center:Vertex = Vertex()
         self.calculate_center()
-        for face in faces:
-            face.calculate_normal(self.center)
+        if calculate_normals:
+            for face in faces:
+                face.calculate_normal(self.center, self)
 
         self.rotation = Vertex()
         self.name:str = ""
@@ -267,81 +387,25 @@ class Mesh:
             face.move_to(new_face_x, new_face_y, new_face_z)
 
     def rotate_to(self, x: float = None, y: float = None, z: float = None):
-        """
-        Rotate the whole mesh based on rotation matrix https://en.wikipedia.org/wiki/Rotation_matrix (check the 3D Section)
-        Rx = [
-            [1  0      0 ]
-            [0 cosθ -sinθ]
-            [0 sinθ  cosθ]
-        ]
-        Ry = [
-            [cosθ  0  sinθ]
-            [0     1    0 ]
-            [-sinθ 0  cosθ]
-        ]
-        Rz = [
-            [cosθ -sinθ 0]
-            [sinθ  cosθ 0]
-            [0      0   1]
-        ]
-        """
-        pivot = self.center
-        theta_x, theta_y, theta_z = 0, 0, 0
         
-
+        theta_x, theta_y, theta_z = 0, 0, 0
         # Calculate rotation differences
         if x is not None:
-            theta_x = (x - self.rotation.x) * math.pi / 180  # Convert to radians
+            theta_x = (x - self.rotation.x)
             self.rotation.x = x
         
         if y is not None:
-            theta_y = (y - self.rotation.y) * math.pi / 180  # Convert to radians
+            theta_y = (y - self.rotation.y)
             self.rotation.y = y
         
         if z is not None:
-            theta_z = (z - self.rotation.z) * math.pi / 180  # Convert to radians
+            theta_z = (z - self.rotation.z)
             self.rotation.z = z
-
-
+        
         # To avoid recalculating the normal, we can put it on the list as a vertex. it will be rotated as it is supposed to
         vertices_list = self.computed_normals_list + self.computed_vertices_list
+        Vertex.rotate_vertices_based_on_pivot_point(self.center, vertices_list, theta_x, theta_y, theta_z)
 
-        # Rotate each vertex
-        for vertex in vertices_list:
-            # Translate vertex to origin (relative to center)
-            dx = vertex.x - pivot.x
-            dy = vertex.y - pivot.y
-            dz = vertex.z - pivot.z
-
-
-            if theta_x != 0:
-                cos_theta_x = math.cos(theta_x)
-                sin_theta_x = math.sin(theta_x)
-                ny = dy * cos_theta_x - dz * sin_theta_x
-                nz = dy * sin_theta_x + dz * cos_theta_x
-                dy = ny
-                dz = nz
-                
-            if theta_y != 0:
-                cos_theta_y = math.cos(theta_y)
-                sin_theta_y = math.sin(theta_y)
-                nx = dx * cos_theta_y + dz * sin_theta_y
-                nz = -dx * sin_theta_y + dz * cos_theta_y
-                dx = nx
-                dz = nz
-                
-            if theta_z != 0:
-                cos_theta_z = math.cos(theta_z)
-                sin_theta_z = math.sin(theta_z)
-                nx = dx * cos_theta_z - dy * sin_theta_z
-                ny = dx * sin_theta_z + dy * cos_theta_z
-                dx = nx
-                dy = ny
-
-            vertex.x = dx + pivot.x
-            vertex.y = dy + pivot.y
-            vertex.z = dz + pivot.z
-        
         for face in self.faces:
             face.calculate_center()
 
@@ -377,7 +441,7 @@ class Mesh:
         for face in self.faces:
             adjusted_intensity = float(intensity)
             d = Vertex.distance(face.center, source)
-            adjusted_intensity = adjusted_intensity / (d * distance_modifier)
+            adjusted_intensity = adjusted_intensity / ((d * distance_modifier)**2)
             
             # A narrow angle means that the face is looking at the light, a broad angle means it's facing away from the light source
             angle = Vertex.three_vertex_angle(face.center, face.normal, source)
@@ -394,3 +458,61 @@ def setup_camera(cam):
     cam.recording_surface_size.x = sensor_size[0]
     cam.recording_surface_size.y = sensor_size[1]
     cam.recording_surface_size.z = sensor_size[2]
+
+
+
+
+def ray_triangle_intersection(ray_origin: Vertex, ray_direction: Vertex, v1: Vertex, v2: Vertex, v3: Vertex):
+    epsilon = 1e-8
+ 
+    
+    # Calculate edges of the triangle
+    e1 = v2 - v1
+    e2 = v3 - v1
+    
+    # Calculate determinant
+    h = Vertex.cross(ray_direction, e2)
+    a = Vertex.dot(e1, h)
+    
+    # Ray is parallel to the triangle
+    if abs(a) < epsilon:
+        return None  # No intersection
+    
+    # Calculate f, s, and u
+    f = 1.0 / a
+    s = ray_origin - v0
+    u = f * Vertex.dot(s, h)
+    
+    # Check if the intersection lies outside the triangle
+    if u < 0.0 or u > 1.0:
+        return None
+    
+    # Calculate q and v
+    q = Vertex.cross(s, e1)
+    v = f * Vertex.dot(ray_direction, q)
+    
+    # Check if the intersection lies outside the triangle
+    if v < 0.0 or u + v > 1.0:
+        return None
+    
+    # Calculate t
+    t = f * Vertex.dot(e2, q)
+    
+    if t > epsilon:
+        intersection_point = ray_origin + ray_direction * t
+        return intersection_point  # Intersection point found
+    else:
+        return None  # No valid intersection
+
+def raycast(ray_origin: Vertex, ray_direction: Vertex, face: Face):
+    v1 = face.v1
+    v2 = face.v2
+    v3 = face.v3
+    v4 = face.v4
+
+    if v4:
+        intersection = ray_triangle_intersection(ray_origin, ray_direction, v3, v4, v1)
+        if intersection is not None:
+            return intersection
+    
+    return ray_triangle_intersection(ray_origin, ray_direction, v1, v2, v3)

@@ -18,7 +18,7 @@ This project is my own implementation of this challenge with also a bit of extra
     ⬜ Backface culling (to be improved) 
 
 #### User controls
-    ⬜ Camera movement (to be implemented) 
+    ✅ Camera movement (to be implemented) 
     ✅ Mesh rotation
 
 #### Performance

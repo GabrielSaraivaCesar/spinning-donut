@@ -24,12 +24,14 @@ CAMERA_SETTINGS = {
     # This is important for the camera because the pixels (in this context, chars) are not really squared, instead the height is usually 2x the width size
     'CHAR_HEIGHT/WIDTH_PROPORTION': 2,
     'RECORDING_SENSOR_SIZE': (1, 1, 1), # X,Y,Zoom - Mimics the camera sensor
-    'POSITION': (0, 0, -10)
+    'POSITION': (0, 0, -10),
+    'SPEED': 1,
+    'ROTATION_SPEED': 30
 }
 
 LIGHT_SOURCE = {
-    'POSITION': (10, -10, -10),
-    'INTENSITY': 2
+    'POSITION': (0, 10, 20),
+    'INTENSITY': 1
 }
 
 
@@ -39,6 +41,7 @@ class AvailableMeshes(Enum):
     TOROID_HIGH_POLY = a()
     PYRAMID = a()
     SHUTTLE = a()
+    FLOWER = a()
     
 
-ACTIVE_MODEL=AvailableMeshes.TOROID_HIGH_POLY
+ACTIVE_MODEL=AvailableMeshes.FLOWER

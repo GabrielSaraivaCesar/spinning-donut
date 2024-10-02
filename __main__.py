@@ -12,13 +12,17 @@ toroid = factory_3d.toroid_factory(2, 1, resolution=20)
 toroid_high_poly = factory_3d.toroid_factory(2, 1, resolution=50)
 pyramid = factory_3d.pyramid_factory(4, 3)
 shuttle = factory_3d.import_mesh("3d_models/shuttle.obj")
+flower = factory_3d.import_mesh("3d_models/flower.obj")
+
 
 AVAILABLE_MODELS = {
     config.AvailableMeshes.CUBE: cube,
     config.AvailableMeshes.TOROID: toroid,
     config.AvailableMeshes.TOROID_HIGH_POLY: toroid_high_poly,
     config.AvailableMeshes.PYRAMID: pyramid,
-    config.AvailableMeshes.SHUTTLE: shuttle
+    config.AvailableMeshes.SHUTTLE: shuttle,
+    config.AvailableMeshes.FLOWER: flower,
+
 }
 
 def draw(mesh, cam, fps=None):
@@ -74,6 +78,7 @@ def start():
     last_time = None
     screen = terminal_drawing.get_screen_matrix()
 
+
 def update():
     update_rotation_values()
     active_mesh.rotate_to(x=rx, y=ry, z=rz)
@@ -123,6 +128,20 @@ def update_rotation_values():
         d_z = config.ROTATION_SPPEED * delta_time * -1
     rz += d_z
 
+    cam_speed = config.CAMERA_SETTINGS.get('SPEED', 10)
+    cam_rot_speed = config.CAMERA_SETTINGS.get('ROTATION_SPEED', 10)
+    if keyboard.is_pressed('w'):
+        # cam.relative_move(0, 0, cam_speed*delta_time)
+        cam.recording_surface_size.z += cam_speed*delta_time
+    elif keyboard.is_pressed('s'):
+        # cam.relative_move(0, 0, -cam_speed*delta_time)
+        cam.recording_surface_size.z -= cam_speed*delta_time
+    if keyboard.is_pressed('a'):
+        utils_3d.Vertex.rotate_vertices_based_on_pivot_point(active_mesh.center, [cam.position], 0, cam_rot_speed*delta_time, 0)
+        cam.look_at_target(active_mesh.center)
+    elif keyboard.is_pressed('d'):
+        utils_3d.Vertex.rotate_vertices_based_on_pivot_point(active_mesh.center, [cam.position], 0, -cam_rot_speed*delta_time, 0)
+        cam.look_at_target(active_mesh.center)
 
 
 start()

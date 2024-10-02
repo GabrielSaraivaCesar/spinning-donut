@@ -87,8 +87,6 @@ def cube_factory(size: float) -> utils_3d.Mesh:
 
     # Create and return the cube mesh
     mesh = utils_3d.Mesh(faces)
-    # faces[2].recalculate_normal(mesh, flip=True)
-
     mesh.name = "Cube"
     return mesh
 
@@ -129,6 +127,7 @@ def import_mesh(path):
     vertices = []
     faces = []
 
+    exit()
     for vertex in mesh.vertices:
         vertices.append(
             utils_3d.Vertex(
