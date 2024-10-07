@@ -25,4 +25,4 @@ This project is my own implementation of this challenge with also a bit of extra
     ✅ Performance logs
 
 ## Challenges
-There are many crucial crucial knowlage needed to implement your own Spinning Donut script. But let's start with the definition of our 3D library structure.
+-- TO BE UPDATED -- 
